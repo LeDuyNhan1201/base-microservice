@@ -1,0 +1,66 @@
+server:
+  port: 8084
+
+#_______________________________________JWT_______________________________________
+jwt:
+  accessSignerKey: ${ACCESS_SIGNER_KEY}
+
+#_______________________________________GRPC_______________________________________
+grpc:
+  server:
+    port: 10004
+
+#_______________________________________LOGGING_______________________________________
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+#_______________________________________MANAGEMENT_______________________________________
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  observations:
+    key-values:
+      application: file-service
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+#_______________________________________COMMON_______________________________________
+spring:
+  config:
+    import: file:env.properties
+
+  profiles:
+    active: dev
+
+  application:
+    name: file-service
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    default-locale: en

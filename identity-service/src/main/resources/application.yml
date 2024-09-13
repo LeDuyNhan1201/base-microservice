@@ -1,0 +1,160 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /identity
+    encoding:
+      charset: UTF-8
+
+#_______________________________________JWT_______________________________________
+jwt:
+  accessSignerKey: ${ACCESS_SIGNER_KEY}
+  refreshSignerKey: ${REFRESH_SIGNER_KEY}
+  valid-duration: 2592000 # in seconds
+  refreshable-duration: 2592000 # in seconds
+
+#_______________________________________GRPC_______________________________________
+grpc:
+  server:
+      port: 10002
+
+  client:
+    profile-service:
+      address: static://localhost:10003
+      negotiationType: plaintext
+    file-service:
+      address: static://localhost:10004
+      negotiationType: plaintext
+
+#_______________________________________LOGGING_______________________________________
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+#_______________________________________MANAGEMENT_______________________________________
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  observations:
+    key-values:
+      application: identity-service
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+#_______________________________________API DOCUMENT_______________________________________
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+  show-actuator: true
+
+openapi:
+  service:
+    api-docs: identity-service-rest-api
+    title: Identity Service REST API
+    description: This is the API documentation for Identity Service.
+    version: 1.0.0
+    server-url: http://localhost:${server.port}${server.servlet.context-path}
+    server-description: Infinity Net Backend API service For Development
+
+#_______________________________________COMMON_______________________________________
+spring:
+  config:
+    import: file:env.properties
+
+  profiles:
+    active: dev
+
+  application:
+    name: identity-service
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    default-locale: en
+
+#_______________________________________DATABASE_______________________________________
+  datasource:
+    url: jdbc:postgresql://localhost:5432/identity_service_db
+    username: ${POSTGRES_USER:ben1201}
+    password: ${POSTGRES_PASSWORD:Ben1201#}
+    hikari:
+      driver-class-name: org.postgresql.Driver
+      maximum-pool-size: 10
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+#  flyway:
+#    enabled: true
+#    url: jdbc:postgresql://localhost:5432/identity_service_db
+#    user: ${POSTGRES_USER:ben1201}
+#    password: ${POSTGRES_PASSWORD:Ben1201#}
+#    locations: classpath:/db/migration
+#    baseline-on-migrate: true
+#    baseline-version: 0
+
+#_______________________________________REDIS_______________________________________
+  cache:
+    type: redis
+
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 0
+
+#_______________________________________KAFKA_______________________________________
+  kafka:
+    bootstrap-servers: localhost:9093
+    listener:
+      ack-mode: manual
+      client-id: identity-service
+
+    properties:
+      security.protocol: SSL
+      #      sasl.mechanism: PLAIN
+      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+      ssl.truststore.location: identity-service/certs/identity.truststore.jks
+      ssl.truststore.password: ${IDNETITY_PASSWORD}
+      ssl.keystore.location: identity-service/certs/identity.keystore.jks
+      ssl.keystore.password: ${IDNETITY_PASSWORD}
+      ssl.key.password: ${IDNETITY_PASSWORD}
+
+      schema:
+        registry:
+          url: http://localhost:8081
+

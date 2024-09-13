@@ -1,0 +1,102 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /mail
+    encoding:
+      charset: UTF-8
+
+#_______________________________________LOGGING_______________________________________
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+#_______________________________________MANAGEMENT_______________________________________
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  observations:
+    key-values:
+      application: mail-service
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+#_______________________________________COMMON_______________________________________
+spring:
+  config:
+    import: file:env.properties
+
+  mail:
+    from: ${FROM_MAIL}
+    host: smtp.gmail.com
+    port: 587
+    username: benlun99999@gmail.com
+    password: wzjgpkghyvmvnoyz # wzjg pkgh yvmv noyz
+    default-encoding: UTF-8
+    properties:
+      mail:
+        mime:
+          charset: UTF
+        smtp:
+          writetimeout: 10000
+          connectiontimeout: 10000
+          timeout: 10000
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  profiles:
+    active: dev
+
+  application:
+    name: mail-service
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    default-locale: en
+
+#_______________________________________KAFKA_______________________________________
+  kafka:
+    bootstrap-servers: localhost:9093
+    listener:
+      ack-mode: manual
+      client-id: mail-service
+
+    properties:
+      security.protocol: SSL
+      #      sasl.mechanism: PLAIN
+      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+      ssl.truststore.location: mail-service/certs/mail.truststore.jks
+      ssl.truststore.password: ${MAIL_PASSWORD}
+      ssl.keystore.location: mail-service/certs/mail.keystore.jks
+      ssl.keystore.password: ${MAIL_PASSWORD}
+      ssl.key.password: ${MAIL_PASSWORD}
+
+      schema:
+        registry:
+          url: http://localhost:8081
+
+    identity-consumer:
+      group-id: identity-to-profile-group
+

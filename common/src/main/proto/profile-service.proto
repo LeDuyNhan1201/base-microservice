@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package com.ben.grpc.profile;
+
+option java_outer_classname = "proto";
+option java_multiple_files = true;
+
+import "utils/utils.proto";
+
+/*_________________________________________REQUESTS__________________________________________*/
+message CreateProfileRequest {
+
+  string userId = 1;
+
+  string firstName = 2;
+
+  string lastName = 3;
+
+}
+
+message UpdateAvatarRequest {
+
+  string id = 1;
+
+  string avatarId = 2;
+
+}
+
+/*_________________________________________RESPONSES__________________________________________*/
+message ProfileResponse {
+
+  string id = 1;
+
+  utils.WriteStatus status = 4;
+
+}
+
+/*_________________________________________SERVICE__________________________________________*/
+service ProfileService {
+
+  rpc createProfile(CreateProfileRequest) returns (ProfileResponse) {}
+
+  rpc updateAvatar(UpdateAvatarRequest) returns (ProfileResponse) {}
+
+}

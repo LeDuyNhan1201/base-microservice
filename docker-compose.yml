@@ -1,0 +1,396 @@
+version: '3.9'
+
+services:
+#_______________________________________COMMON SERVICES_______________________________________
+  #  PGADMIN
+  base-microservice-pgadmin:
+    image: dpage/pgadmin4:snapshot
+    container_name: base-microservice-pgadmin
+    depends_on:
+      [ base-microservice-identity-service-postgres ]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@ben.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - base-microservice-pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # PHPMYADMIN
+  base-microservice-phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: base-microservice-phpmyadmin
+    depends_on:
+      [ base-microservice-profile-service-mysql ]
+    environment:
+      PMA_HOST: base-microservice-profile-service-mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ""
+      MYSQL_ROOT_PASSWORD: ""
+    ports:
+      - "8000:80"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # MONGODB EXPRESS
+  base-microservice-mongo-express:
+    image: mongo-express:1.0.2-20-alpine3.19
+    container_name: base-microservice-mongo-express
+    depends_on:
+      [ base-microservice-file-service-mongodb ]
+    environment:
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ben1201
+      ME_CONFIG_MONGODB_ADMINPASSWORD: Ben1201%23 # URL encoded value of Ben1201#
+      ME_CONFIG_MONGODB_SERVER: base-microservice-file-service-mongodb
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "5051:8081"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  REDIS INSIGHT
+  base-microservice-redis-insight:
+    image: redis/redisinsight:latest
+    container_name: base-microservice-redis-insight
+    volumes:
+      - base-microservice-redis-insight-data:/db
+    ports:
+      - "5540:5540"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # KAFKA BROKER
+  base-microservice-kafka-broker:
+    image: bitnami/kafka:3.5.2-debian-12-r24
+    container_name: base-microservice-kafka-broker
+    hostname: base-microservice-kafka-broker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_KRAFT_MODE: "true"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,SSL_LOCAL://0.0.0.0:9093,SSL_DOCKER://0.0.0.0:9094,CONTROLLER://0.0.0.0:9095"
+      KAFKA_ADVERTISED_LISTENERS: "SSL_LOCAL://localhost:9093,SSL_DOCKER://base-microservice-kafka-broker:9094,PLAINTEXT://base-microservice-kafka-broker:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,SSL_LOCAL:SSL,SSL_DOCKER:SSL,CONTROLLER:PLAINTEXT"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+#      KAFKA_CFG_SECURITY_INTER_BROKER_PROTOCOL: "SSL_DOCKER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@base-microservice-kafka-broker:9095"
+      KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL: "PLAIN"
+      KAFKA_SSL_CLIENT_AUTH: "required"
+      KAFKA_SSL_KEYSTORE_LOCATION: "/bitnami/kafka/config/certs/kafka.keystore.jks"
+      KAFKA_CFG_SSL_KEYSTORE_PASSWORD: "kafkapass"
+      KAFKA_CFG_SSL_KEY_PASSWORD: "kafkapass"
+      KAFKA_SSL_TRUSTSTORE_LOCATION: "/bitnami/kafka/config/certs/kafka.truststore.jks"
+      KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD: "kafkapass"
+#      KAFKA_CFG_SASL_ENABLED_MECHANISMS: "PLAIN"
+#      KAFKA_CFG_OPTS: "-Djava.security.auth.login.config=/opt/bitnami/kafka/config/kafka_jaas.conf"
+#      KAFKA_CFG_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+    volumes:
+      - ./docker/kafka/certs:/bitnami/kafka/config/certs
+      - base-microservice-kafka-broker-data:/var/lib/kafka/data
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # SCHEMA REGISTRY
+  base-microservice-schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.6
+    container_name: base-microservice-schema-registry
+    depends_on:
+      [ base-microservice-kafka-broker ]
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "SSL://base-microservice-kafka-broker:9094"
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: "SSL"
+      #      SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: "PLAIN"
+      #      SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required username='ben1201' password='Ben1201#';"
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_LOCATION: "/etc/schema-registry/schema-registry.keystore.jks"
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_PASSWORD: "schemaregistrypass"
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: "/etc/schema-registry/schema-registry.truststore.jks"
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_PASSWORD: "schemaregistrypass"
+      SCHEMA_REGISTRY_HOST_NAME: "base-microservice-schema-registry"
+      SCHEMA_REGISTRY_LISTENERS: "http://base-microservice-schema-registry:8081,http://localhost:8081"
+    volumes:
+      - ./docker/schema-registry/certs:/etc/schema-registry
+    ports:
+      - "8081:8081"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  DEBEZIUM CONNECT
+  base-microservice-debezium:
+    image: debezium/connect:nightly
+    container_name: base-microservice-debezium
+    depends_on:
+      [ base-microservice-kafka-broker, base-microservice-schema-registry ]
+    environment:
+      BOOTSTRAP_SERVERS: base-microservice-kafka-broker:9092
+      GROUP_ID: base_microservice_debezium_group
+      CONFIG_STORAGE_TOPIC: base_microservice_debezium_connect_configs
+      OFFSET_STORAGE_TOPIC: base_microservice_debezium_connect_offsets
+      STATUS_STORAGE_TOPIC: base_microservice_debezium_connect_statuses
+#      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+#      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+#      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+#      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    ports:
+      - "6063:8083"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # KAFKA UI
+  base-microservice-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: base-microservice-kafka-ui
+    depends_on:
+      [ base-microservice-kafka-broker ]
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: PLAINTEXT://base-microservice-kafka-broker:9092
+#      KAFKA_CLUSTERS_0_SASL_MECHANISM: SCRAM-SHA-256
+#      KAFKA_CLUSTERS_0_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="ben1201" password="Ben1201#";
+#      KAFKA_CLUSTERS_0_SSL_TRUSTSTORE_LOCATION: /app/kafka-ui/truststore.jks
+#      KAFKA_CLUSTERS_0_SSL_TRUSTSTORE_PASSWORD: Ben1201#
+    volumes:
+      - base-microservice-kafka-ui-data:/app/kafka-ui/data
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________IDENTITY SERVICE_______________________________________
+  #  POSTGRES
+  base-microservice-identity-service-postgres:
+    image: postgres:12.20-bullseye
+    container_name: base-microservice-identity-service-postgres
+    environment:
+      POSTGRES_USER: ben1201
+      POSTGRES_PASSWORD: Ben1201#
+      POSTGRES_DB: identity_service_db
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - base-microservice-identity-service-postgres-data:/var/lib/postgresql/data
+      - ./identity-service/identity-service-postgres-init-db:/docker-entrypoint-initdb.d
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  REDIS
+  base-microservice-identity-service-redis:
+    image: redis:latest
+    container_name: base-microservice-identity-service-redis
+    volumes:
+      - base-microservice-identity-service-redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________PROFILE SERVICE_______________________________________
+  #  MYSQL
+  base-microservice-profile-service-mysql:
+    image: mysql:latest
+    container_name: base-microservice-profile-service-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_DATABASE: profile_service_db
+      MYSQL_USER: ben1201
+      MYSQL_PASSWORD: Ben1201#
+    volumes:
+#      - ./profile-service/mysql-config/conf.d:/etc/mysql/conf.d
+      - ./profile-service/profile-service-mysql-init-db:/docker-entrypoint-initdb.d
+      - base-microservice-profile-service-mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________FILE SERVICE_______________________________________
+  #  MINIO
+  base-microservice-file-service-minio:
+    image: minio/minio:RELEASE.2024-08-26T15-33-07Z.fips
+    container_name: base-microservice-file-service-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ben1201
+      MINIO_ROOT_PASSWORD: Ben1201#
+    volumes:
+      - base-microservice-file-service-minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  MONGODB
+  base-microservice-file-service-mongodb:
+    image: mongo:latest
+    container_name: base-microservice-file-service-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ben1201
+      MONGO_INITDB_ROOT_PASSWORD: Ben1201#
+    volumes:
+      - base-microservice-file-service-mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________GRAFANA STACK_______________________________________
+  #  TEMPO
+  base-microservice-tempo:
+    image: grafana/tempo:main-bbe0435
+    container_name: base-microservice-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./docker/grafana-stack/tempo/tempo.yml:/etc/tempo.yaml:ro
+      - ./docker/grafana-stack/tempo/tempo-data:/tmp/tempo
+    ports:
+      - "3110:3100"  # Tempo
+      - "9411:9411" # zipkin
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  LOKI
+  base-microservice-loki:
+    image: grafana/loki:main
+    container_name: base-microservice-loki
+    command: [ "-config.file=/etc/loki/local-config.yaml" ]
+    ports:
+      - "3100:3100"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  PROMETHEUS
+  base-microservice-prometheus:
+    image: prom/prometheus:main
+    container_name: base-microservice-prometheus
+    command:
+      - --enable-feature=exemplar-storage
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./docker/grafana-stack/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  #  GRAFANA
+  base-microservice-grafana:
+    image: grafana/grafana:10.1.0
+    container_name: base-microservice-grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: true
+    volumes:
+      - ./docker/grafana-stack/grafana:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________ELK STACK_______________________________________
+  # ELASTICSEARCH
+  base-microservice-elasticsearch:
+    image: elasticsearch:8.15.0
+    container_name: base-microservice-elasticsearch
+    environment:
+      xpack.security.enabled: false
+      discovery.type: single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - base-microservice-elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # KIBANA
+  base-microservice-kibana:
+    image: kibana:8.15.0
+    container_name: base-microservice-kibana
+    depends_on:
+      [ base-microservice-elasticsearch ]
+    environment:
+      ELASTICSEARCH_HOSTS: http://base-microservice-elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+  # LOGSTASH
+  base-microservice-logstash:
+    image: logstash:8.15.0
+    container_name: base-microservice-logstash
+    depends_on:
+      [ base-microservice-elasticsearch ]
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    volumes:
+      - ./docker/elk-stack/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./docker/elk-stack/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    networks:
+      - base-microservice-network
+    restart: unless-stopped
+
+#_______________________________________NETWORKS & VOLUMES_______________________________________
+networks:
+  base-microservice-network:
+    driver: bridge
+
+volumes:
+  base-microservice-pgadmin-data:
+  base-microservice-redis-insight-data:
+  base-microservice-kafka-broker-data:
+  base-microservice-kafka-ui-data:
+  base-microservice-identity-service-postgres-data:
+  base-microservice-identity-service-redis-data:
+  base-microservice-profile-service-mysql-data:
+  base-microservice-file-service-minio-data:
+  base-microservice-file-service-mongodb-data:
+  base-microservice-elasticsearch-data:

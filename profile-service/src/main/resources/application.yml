@@ -1,0 +1,171 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /profile
+    encoding:
+      charset: UTF-8
+
+#_______________________________________JWT_______________________________________
+jwt:
+  accessSignerKey: ${ACCESS_SIGNER_KEY}
+
+#_______________________________________GRPC_______________________________________
+grpc:
+  server:
+    port: 10003
+
+  client:
+    file-service:
+      address: static://localhost:10004
+      negotiationType: plaintext
+
+#_______________________________________LOGGING_______________________________________
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+#_______________________________________MANAGEMENT_______________________________________
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  observations:
+    key-values:
+      application: profile-service
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+#_______________________________________API DOCUMENT_______________________________________
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+  show-actuator: true
+
+openapi:
+  service:
+    api-docs: profile-service-rest-api
+    title: Profile Service REST API
+    description: This is the API documentation for Identity Service.
+    version: 1.0.0
+    server-url: http://localhost:${server.port}${server.servlet.context-path}
+    server-description: Infinity Net Backend API service For Development
+
+#_______________________________________COMMON_______________________________________
+spring:
+  config:
+    import: file:env.properties
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  profiles:
+    active: dev
+
+  application:
+    name: profile-service
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    default-locale: en
+
+#_______________________________________DATABASE_______________________________________
+  datasource:
+    username: ${MYSQL_USER:ben1201}
+    password: ${MYSQL_PASSWORD:Ben1201#}
+    url: jdbc:mysql://localhost:3306/profile_service_db?createDatabaseIfNotExist=true
+    hikari:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      maximum-pool-size: 10
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  debezium:
+    connectors:
+      - name: profile-service-mysql-connector
+        config:
+          database.hostname: localhost
+          database.port: 3306
+          database.user: ben1201
+          database.password: Ben1201#
+          database.server.id: 184054
+          database.server.name: profile-service-mysql-db
+          database.include.list: profile_service_db
+          table.include.list: profile_service_db.user_profiles
+          topic.prefix: profile-service
+          schema.history.internal.kafka.bootstrap.servers: 0.0.0.0:9092
+          schema.history.internal.kafka.topic: schema-changes.profile_service_db
+
+  #_______________________________________REDIS_______________________________________
+  cache:
+    type: redis
+
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      database: 0
+
+#    elasticsearch:
+#      cluster-names: docker-cluster
+#      cluster-node: localhost:9200
+#      repositories:
+#        enabled: true
+#      auto-index-creation: true
+
+#_______________________________________KAFKA_______________________________________
+  kafka:
+    bootstrap-servers: localhost:9093
+
+    properties:
+      security.protocol: SSL
+#      #      sasl.mechanism: PLAIN
+#      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+      ssl.truststore.location: profile-service/certs/profile.truststore.jks
+      ssl.truststore.password: ${PROFILE_PASSWORD}
+      ssl.keystore.location: profile-service/certs/profile.keystore.jks
+      ssl.keystore.password: ${PROFILE_PASSWORD}
+      ssl.key.password: ${PROFILE_PASSWORD}
+
+      schema:
+        registry:
+          url: http://localhost:8081
+
+    identity-consumer:
+      group-id: identity-to-profile-group

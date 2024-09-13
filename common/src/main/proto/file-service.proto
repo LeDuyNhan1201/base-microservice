@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package com.ben.grpc.file;
+
+option java_outer_classname = "proto";
+option java_multiple_files = true;
+
+import "utils/utils.proto";
+
+/*_________________________________________OBJECTS__________________________________________*/
+message File {
+
+  bytes content = 1;
+
+}
+
+message FileMetadata {
+
+  string objectKey = 1;
+
+  string contentType = 2;
+
+  int32 contentLength = 3;
+
+}
+
+/*_________________________________________REQUESTS__________________________________________*/
+message FileUploadRequest {
+
+  string filePath = 1;
+
+  File file = 2;
+
+}
+
+message FileDeleteRequest {
+
+  string id = 1;
+
+}
+
+message FolderDeleteRequest {
+
+  string folderPath = 1;
+
+}
+
+message ReadFileRequest {
+
+  string id = 1;
+
+}
+
+/*_________________________________________RESPONSES__________________________________________*/
+message FileUploadResponse {
+
+  FileMetadata fileMetadata = 1;
+
+  utils.WriteStatus uploadStatus = 2;
+
+}
+
+message FileDeleteResponse {
+
+  utils.WriteStatus deleteStatus = 1;
+
+}
+
+message ReadFileResponse {
+
+  string url = 1;
+
+}
+
+/*_________________________________________SERVICE__________________________________________*/
+service FileService {
+
+  rpc uploadFile (stream FileUploadRequest) returns (FileUploadResponse) {}
+
+  rpc deleteFile (FileDeleteRequest) returns (FileDeleteResponse) {}
+
+  rpc deleteFolder (FolderDeleteRequest) returns (FileDeleteResponse) {}
+
+  rpc readFile (ReadFileRequest) returns (ReadFileResponse) {}
+
+}

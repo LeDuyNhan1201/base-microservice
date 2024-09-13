@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+#  POSTGRES
+  identity-service-postgres:
+    image: postgres:12.20-bullseye
+    container_name: identity-service-postgres
+    environment:
+      POSTGRES_USER: ben1201
+      POSTGRES_PASSWORD: Ben1201#
+      POSTGRES_DB: identity_service_db
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity-service-postgres-data:/var/lib/postgresql/data
+      - identity-service-postgres-init-db:/docker-entrypoint-initdb.d
+    networks:
+      - ben-network
+    restart: unless-stopped
+
+#  REDIS
+  identity-service-redis:
+    image: redis:latest
+    container_name: identity-service-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - identity-service-redis-data:/data
+    networks:
+      - ben-network
+    restart: unless-stopped
+
+networks:
+  ben-network:
+    driver: bridge
+
+volumes:
+  identity-service-postgres-data:
+  identity-service-postgres-init-db:
+  identity-service-redis-data:

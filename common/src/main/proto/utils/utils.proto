@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.ben.grpc.utils;
+
+option java_multiple_files = true;
+
+enum WriteStatus {
+
+  SUCCEEDED = 0;
+
+  FAILED = 1;
+
+}

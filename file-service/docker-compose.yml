@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+#  MONOGDB
+  file-service-mongodb:
+    image: mongo:latest
+    container_name: file-service-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ben1201
+      MONGO_INITDB_ROOT_PASSWORD: Ben1201#
+    volumes:
+      - file-service-mongodb-data:/data/db
+    networks:
+      - ben-network
+    restart: unless-stopped
+
+networks:
+  ben-network:
+    driver: bridge
+
+volumes:
+  file-service-mongodb-data:

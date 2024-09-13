@@ -1,0 +1,22 @@
+package com.ben.identity.dtos.responses;
+
+import com.ben.identity.dtos.others.UserInfo;
+import com.ben.identity.dtos.others.Tokens;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SignInResponse {
+
+    Tokens tokens;
+
+    UserInfo user;
+
+}
