@@ -49,6 +49,7 @@
 
 	<properties>
 		<java.version>22</java.version>
+		<spring-cloud.version>2023.0.3</spring-cloud.version>
 		<openapi.version>2.6.0</openapi.version>
 		<spring-grpc.version>3.1.0.RELEASE</spring-grpc.version>
 		<minio.version>8.5.12</minio.version>
@@ -56,6 +57,7 @@
 		<micrometer-prometheus.version>1.13.3</micrometer-prometheus.version>
 		<loki.version>1.5.2</loki.version>
 		<zipkin.version>3.4.0</zipkin.version>
+		<datasource-micrometer.version>1.0.5</datasource-micrometer.version>
 		<logstash-logback-encoder.version>8.0</logstash-logback-encoder.version>
 	</properties>
 
@@ -88,6 +90,12 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+
+		<!--EUREKA CLIENT-->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 
 		<!--ACTUATOR-->
@@ -163,6 +171,13 @@
 			<version>${zipkin.version}</version>
 		</dependency>
 
+		<!--DATASOURCE-->
+		<dependency>
+			<groupId>net.ttddyy.observation</groupId>
+			<artifactId>datasource-micrometer-spring-boot</artifactId>
+			<version>${datasource-micrometer.version}</version>
+		</dependency>
+
 		<!--LOGSTASH-->
 		<dependency>
 			<groupId>net.logstash.logback</groupId>
@@ -183,6 +198,19 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<!--SPRING CLOUD-->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<profiles>
 		<profile>

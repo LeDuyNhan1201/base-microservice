@@ -1,9 +1,60 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
   servlet:
     context-path: /profile
     encoding:
       charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
+
+gateway:
+  domain: ${GATEWAY_DOMAIN:localhost}
+  port: ${GATEWAY_PORT:8888}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      identityService:
+        registerHealthIndicator: true  # Đăng ký health indicator cho Actuator
+        slidingWindowSize: 10          # Kích thước cửa sổ trượt
+        failureRateThreshold: 50       # Ngưỡng phần trăm lỗi để mở Circuit Breaker
+        waitDurationInOpenState: 10000 # Thời gian đợi khi Circuit Breaker ở trạng thái mở (mili giây)
+        permittedNumberOfCallsInHalfOpenState: 3 # Số cuộc gọi được phép khi ở trạng thái half-open
+        minimumNumberOfCalls: 5        # Số lượng tối thiểu các cuộc gọi trước khi tính toán lỗi
+        automaticTransitionFromOpenToHalfOpenEnabled: true # Tự động chuyển từ trạng thái open sang half-open
+
+      fileService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  timelimiter:
+    instances:
+      identityService:
+        timeoutDuration: 1s
+
+      fileService:
+        timeoutDuration: 1s
+
+  retry:
+    instances:
+      fileService:
+        maxAttempts: 3
+        waitDuration: 1s
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    service-url:
+      defaultZone: http://${SERVER_HOST:localhost}:${EUREKA_PORT:8761}/eureka
 
 #_______________________________________JWT_______________________________________
 jwt:
@@ -12,12 +63,12 @@ jwt:
 #_______________________________________GRPC_______________________________________
 grpc:
   server:
-    port: 10003
+    port: ${GRPC_PORT:10003}
 
-  client:
-    file-service:
-      address: static://localhost:10004
-      negotiationType: plaintext
+#  client:
+#    file-service:
+#      address: static://localhost:10004
+#      negotiationType: plaintext
 
 #_______________________________________LOGGING_______________________________________
 logging:
@@ -43,16 +94,23 @@ management:
     health:
       show-details: always
 
+  info:
+    git:
+      enabled: true
+      mode: full
+
   metrics:
     distribution:
       percentiles-histogram:
         http:
           server:
             requests: true
+    tags:
+      application: ${spring.application.name}
 
   observations:
     key-values:
-      application: profile-service
+      application: ${spring.application.name}
 
   tracing:
     sampling:
@@ -61,10 +119,8 @@ management:
 #_______________________________________API DOCUMENT_______________________________________
 springdoc:
   api-docs:
-    enabled: true
     path: /api-docs
   swagger-ui:
-    enabled: true
     path: /swagger-ui
   show-actuator: true
 
@@ -82,27 +138,28 @@ spring:
   config:
     import: file:env.properties
 
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
-
   profiles:
     active: dev
 
   application:
     name: profile-service
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   messages:
     basename: i18n/messages
     encoding: UTF-8
     default-locale: en
+    cache-duration: 3600
 
 #_______________________________________DATABASE_______________________________________
   datasource:
     username: ${MYSQL_USER:ben1201}
     password: ${MYSQL_PASSWORD:Ben1201#}
-    url: jdbc:mysql://localhost:3306/profile_service_db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/${MYSQL_DB:profile_service_db}?createDatabaseIfNotExist=true
     hikari:
       driver-class-name: com.mysql.cj.jdbc.Driver
       maximum-pool-size: 10
@@ -120,16 +177,17 @@ spring:
     connectors:
       - name: profile-service-mysql-connector
         config:
-          database.hostname: localhost
+          connector.class: io.debezium.connector.mysql.MySqlConnector
+          tasks.max: 1
+          database.hostname: base-microservice-profile-service-mysql
           database.port: 3306
-          database.user: ben1201
-          database.password: Ben1201#
-          database.server.id: 184054
+          database.user: ${MYSQL_USER:ben1201}
+          database.password: ${MYSQL_PASSWORD:Ben1201#}
+          database.server.id: 1
           database.server.name: profile-service-mysql-db
-          database.include.list: profile_service_db
-          table.include.list: profile_service_db.user_profiles
+          database.include.list: ${MYSQL_DB:profile_service_db}
           topic.prefix: profile-service
-          schema.history.internal.kafka.bootstrap.servers: 0.0.0.0:9092
+          schema.history.internal.kafka.bootstrap.servers: ${INTERNAL_KAFKA_BOOTSTRAP_SERVERS:base-microservice-kafka-broker:9092}
           schema.history.internal.kafka.topic: schema-changes.profile_service_db
 
   #_______________________________________REDIS_______________________________________
@@ -138,8 +196,8 @@ spring:
 
   data:
     redis:
-      port: 6379
-      host: localhost
+      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
       database: 0
 
 #    elasticsearch:
@@ -151,12 +209,15 @@ spring:
 
 #_______________________________________KAFKA_______________________________________
   kafka:
-    bootstrap-servers: localhost:9093
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
+#    listener:
+#      ack-mode: manual
+#      client-id: profile-service
 
     properties:
       security.protocol: SSL
-#      #      sasl.mechanism: PLAIN
-#      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+#      sasl.mechanism: PLAIN
+#      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
       ssl.truststore.location: profile-service/certs/profile.truststore.jks
       ssl.truststore.password: ${PROFILE_PASSWORD}
       ssl.keystore.location: profile-service/certs/profile.keystore.jks
@@ -165,7 +226,7 @@ spring:
 
       schema:
         registry:
-          url: http://localhost:8081
+          url: http://${SCHEMA_REGISTRY_URL:localhost:8081}
 
     identity-consumer:
       group-id: identity-to-profile-group

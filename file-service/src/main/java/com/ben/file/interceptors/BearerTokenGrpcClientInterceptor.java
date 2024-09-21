@@ -4,8 +4,8 @@ import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.interceptor.GrpcGlobalClientInterceptor;
 
+import static com.ben.common.Utils.convertToUpperHyphen;
 import static com.ben.file.Constants.*;
-import static com.ben.file.Utils.convertToUpperHyphen;
 
 @GrpcGlobalClientInterceptor
 @Slf4j

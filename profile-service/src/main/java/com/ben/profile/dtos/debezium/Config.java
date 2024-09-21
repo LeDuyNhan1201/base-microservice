@@ -43,9 +43,9 @@ public class Config {
     String topicPrefix;
 
     @JsonProperty("schema.history.internal.kafka.bootstrap.servers")
-    String schemaHistoryKafkaBootstrapServers;
+    String schemaHistoryInternalKafkaBootstrapServers;
 
     @JsonProperty("schema.history.internal.kafka.topic")
-    String schemaHistoryKafkaTopic;
+    String schemaHistoryInternalKafkaTopic;
 
 }

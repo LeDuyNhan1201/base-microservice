@@ -1,29 +1,46 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
   servlet:
     context-path: /identity
     encoding:
       charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
+
+gateway:
+  domain: ${GATEWAY_DOMAIN:localhost}
+  port: ${GATEWAY_PORT:8888}
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    service-url:
+      defaultZone: http://${SERVER_HOST:localhost}:${EUREKA_PORT:8761}/eureka
 
 #_______________________________________JWT_______________________________________
 jwt:
   accessSignerKey: ${ACCESS_SIGNER_KEY}
   refreshSignerKey: ${REFRESH_SIGNER_KEY}
-  valid-duration: 2592000 # in seconds
+  valid-duration: 1800 # in seconds
   refreshable-duration: 2592000 # in seconds
 
 #_______________________________________GRPC_______________________________________
 grpc:
   server:
-      port: 10002
+    port: ${GRPC_PORT:10002}
 
-  client:
-    profile-service:
-      address: static://localhost:10003
-      negotiationType: plaintext
-    file-service:
-      address: static://localhost:10004
-      negotiationType: plaintext
+#  client:
+#    profile-service:
+#      address: static://localhost:10003
+#      negotiationType: plaintext
+#
+#    file-service:
+#      address: static://localhost:10004
+#      negotiationType: plaintext
 
 #_______________________________________LOGGING_______________________________________
 logging:
@@ -49,16 +66,23 @@ management:
     health:
       show-details: always
 
+  info:
+    git:
+      enabled: true
+      mode: full
+
   metrics:
     distribution:
       percentiles-histogram:
         http:
           server:
             requests: true
+    tags:
+      application: ${spring.application.name}
 
   observations:
     key-values:
-      application: identity-service
+      application: ${spring.application.name}
 
   tracing:
     sampling:
@@ -67,10 +91,8 @@ management:
 #_______________________________________API DOCUMENT_______________________________________
 springdoc:
   api-docs:
-    enabled: true
     path: /api-docs
   swagger-ui:
-    enabled: true
     path: /swagger-ui
   show-actuator: true
 
@@ -94,10 +116,17 @@ spring:
   application:
     name: identity-service
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   messages:
     basename: i18n/messages
     encoding: UTF-8
     default-locale: en
+    cache-duration: 3600
 
 #_______________________________________DATABASE_______________________________________
   datasource:
@@ -133,21 +162,18 @@ spring:
 
   data:
     redis:
-      port: 6379
-      host: localhost
+      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
       database: 0
 
 #_______________________________________KAFKA_______________________________________
   kafka:
-    bootstrap-servers: localhost:9093
-    listener:
-      ack-mode: manual
-      client-id: identity-service
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
 
     properties:
       security.protocol: SSL
-      #      sasl.mechanism: PLAIN
-      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+#      sasl.mechanism: PLAIN
+#      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
       ssl.truststore.location: identity-service/certs/identity.truststore.jks
       ssl.truststore.password: ${IDNETITY_PASSWORD}
       ssl.keystore.location: identity-service/certs/identity.keystore.jks
@@ -156,5 +182,5 @@ spring:
 
       schema:
         registry:
-          url: http://localhost:8081
+          url: http://${SCHEMA_REGISTRY_URL:localhost:8081}
 

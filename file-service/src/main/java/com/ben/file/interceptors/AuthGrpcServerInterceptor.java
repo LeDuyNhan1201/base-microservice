@@ -40,14 +40,15 @@ public class AuthGrpcServerInterceptor implements ServerInterceptor {
 
         // Extract the token from the headers
         String token = headers.get(AUTHORIZATION_KEY);
+        log.info("[{}]: token: {}", MICROSERVICE_NAME, token);
 
         if (token == null) {
-            log.error("Token missing");
+            log.error("[{}]: Token missing", MICROSERVICE_NAME);
             call.close(UNAUTHENTICATED.withDescription("Token missing"), headers);
             return new ServerCall.Listener<>() {};
 
         } else {
-            log.info("Token: {}", token.substring(7));
+            log.info("[{}] Token: {}", MICROSERVICE_NAME, token.substring(7));
             SecretKeySpec secretKeySpec = new SecretKeySpec(
                     ACCESS_SIGNER_KEY.getBytes(),
                     ACCESS_TOKEN_SIGNATURE_ALGORITHM.getName());

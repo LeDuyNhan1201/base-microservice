@@ -1,6 +1,6 @@
 package com.ben.profile.interceptors;
 
-import com.ben.profile.Constants;
+import com.ben.profile.utils.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;

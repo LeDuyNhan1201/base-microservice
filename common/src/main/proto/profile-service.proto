@@ -38,8 +38,6 @@ message ProfileResponse {
 /*_________________________________________SERVICE__________________________________________*/
 service ProfileService {
 
-  rpc createProfile(CreateProfileRequest) returns (ProfileResponse) {}
-
   rpc updateAvatar(UpdateAvatarRequest) returns (ProfileResponse) {}
 
 }

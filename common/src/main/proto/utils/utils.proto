@@ -11,3 +11,11 @@ enum WriteStatus {
   FAILED = 1;
 
 }
+
+message CustomError {
+
+  string errorCode = 1;
+
+  string message = 2;
+
+}

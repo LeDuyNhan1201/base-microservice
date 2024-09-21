@@ -16,7 +16,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
-import static com.ben.profile.Constants.KAFKA_TOPIC_CREATE_PROFILE;
+import static com.ben.profile.utils.Constants.KAFKA_TOPIC_CREATE_PROFILE;
+import static com.ben.profile.utils.Constants.MICROSERVICE_NAME;
 import static org.springframework.kafka.retrytopic.TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE;
 import static org.springframework.kafka.support.KafkaHeaders.RECEIVED_TOPIC;
 
@@ -36,7 +37,7 @@ public class IdentityConsumer {
 //            concurrency = "1",
             errorHandler = "kafkaListenerErrorHandler")
     @RetryableTopic(
-            attempts = "3",
+            attempts = "5",
             backoff = @Backoff(delay = 1000, multiplier = 1.0, maxDelay = 5000),
             topicSuffixingStrategy = SUFFIX_WITH_INDEX_VALUE,
             retryTopicSuffix = "-retrytopic",
@@ -44,7 +45,8 @@ public class IdentityConsumer {
             include = { AppException.class }
     )
     public void listenCreateProfile(CreateProfileRequest message, Acknowledgment acknowledgment) {
-        log.info("Message received: {}", message);
+        log.info("[{}]: Message received: {}", MICROSERVICE_NAME, message);
+
         userProfileService.createUser(UserProfile.builder()
                 .firstName(message.getFirstName())
                 .lastName(message.getLastName())
@@ -56,7 +58,7 @@ public class IdentityConsumer {
 
     @DltHandler
     public void dtl(String message, @Header(RECEIVED_TOPIC) String topic) {
-        log.info("DTL TOPIC message : {}, topic name : {}", message, topic);
+        log.info("[{}]: DTL TOPIC message : {}, topic name : {}", MICROSERVICE_NAME, message, topic);
     }
 
 }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.ben.identity.utils.Constants.MICROSERVICE_NAME;
 import static com.ben.identity.components.Translator.getLocalizedMessage;
 import static com.ben.identity.exceptions.AppErrorCode.*;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -108,7 +109,8 @@ public class GlobalExceptionHandler {
     }
 
     private void errorLogging(String reason, Exception exception) {
-        log.error("Reason:{}|class:{}|line:{}", reason, exception.getClass(), exception.getStackTrace()[0].getLineNumber());
+        log.error("[{}]: Reason: {} | class: {} | line: {}", MICROSERVICE_NAME,
+                reason, exception.getClass(), exception.getStackTrace()[0].getLineNumber());
     }
 
 }

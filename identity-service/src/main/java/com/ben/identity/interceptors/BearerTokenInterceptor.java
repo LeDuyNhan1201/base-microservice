@@ -1,12 +1,14 @@
 package com.ben.identity.interceptors;
 
-import com.ben.identity.Constants;
+import com.ben.identity.utils.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import static com.ben.identity.utils.Constants.MICROSERVICE_NAME;
 
 @Component
 @Slf4j
@@ -19,10 +21,10 @@ public class BearerTokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
         String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
         
-        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX))
-            // Save the token in gRPC Context or a ThreadLocal for later use in gRPC client calls
+        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX)) {
             Constants.REST_AUTHORIZATION_CONTEXT.set(authorizationHeader);
-
+            log.info("[{}] Token: {}", MICROSERVICE_NAME, Constants.REST_AUTHORIZATION_CONTEXT.get());
+        }
         return true;
     }
 

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package com.ben.grpc.identity;
+
+option java_outer_classname = "proto";
+option java_multiple_files = true;
+
+message IntrospectRequest {
+  string token = 1;
+}
+
+message IntrospectResponse {
+  bool valid = 1;
+}
+
+service IdentityService {
+
+  rpc introspect(IntrospectRequest) returns (IntrospectResponse) {}
+
+}

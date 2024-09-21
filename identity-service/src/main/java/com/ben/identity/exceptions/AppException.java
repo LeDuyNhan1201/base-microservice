@@ -2,7 +2,6 @@ package com.ben.identity.exceptions;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 
@@ -10,17 +9,17 @@ import org.springframework.http.HttpStatus;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AppException extends RuntimeException {
 
-    public AppException(AppErrorCode appErrorCode, HttpStatus httpStatus, String reason) {
+    public AppException(AppErrorCode appErrorCode, HttpStatus httpStatus, String reason, Object... moreInfo) {
         super(appErrorCode.getMessage());
+        this.reason = reason;
         this.appErrorCode = appErrorCode;
         this.httpStatus = httpStatus;
-        this.reason = reason;
+        this.moreInfo = moreInfo;
     }
 
     final AppErrorCode appErrorCode;
-    final HttpStatus httpStatus;
     final String reason;
-    @Setter
-    Object[] moreInfo;
+    final HttpStatus httpStatus;
+    final Object[] moreInfo;
 
 }

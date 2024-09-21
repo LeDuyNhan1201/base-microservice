@@ -1,12 +1,12 @@
 package com.ben.profile.interceptors;
 
-import com.ben.profile.Constants;
+import com.ben.profile.utils.Constants;
 import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.interceptor.GrpcGlobalClientInterceptor;
 
-import static com.ben.profile.Constants.MICROSERVICE_NAME;
-import static com.ben.profile.Utils.convertToUpperHyphen;
+import static com.ben.common.Utils.convertToUpperHyphen;
+import static com.ben.profile.utils.Constants.MICROSERVICE_NAME;
 
 @GrpcGlobalClientInterceptor
 @Slf4j

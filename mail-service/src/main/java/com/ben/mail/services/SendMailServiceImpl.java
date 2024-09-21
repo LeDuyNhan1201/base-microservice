@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.ben.mail.utils.Constants.MICROSERVICE_NAME;
 import static com.ben.mail.components.Translator.getLocalizedMessage;
 
 @Service
@@ -28,15 +29,16 @@ import static com.ben.mail.components.Translator.getLocalizedMessage;
 public class SendMailServiceImpl implements SendMailService {
 
     JavaMailSender mailSender;
+
     SpringTemplateEngine templateEngine;
 
     @Value("${spring.mail.from}")
     @NonFinal
     String emailFrom;
 
-    @Value("${server.port}")
+    @Value("${spring.mail.verify-link}")
     @NonFinal
-    String port;
+    String verifyLink;
 
     @Override
     public void sendMailToVerifyWithToken(String to, String token) throws MessagingException, UnsupportedEncodingException {
@@ -44,7 +46,7 @@ public class SendMailServiceImpl implements SendMailService {
                 "subject_verify_email",
                 "content_verify_email_with_token",
                 "sub_content_verify_email",
-                "footer_verify_email", token);
+                "footer_verify_email", String.format("%s?token=%s", verifyLink, token));
     }
 
     @Override
@@ -70,7 +72,7 @@ public class SendMailServiceImpl implements SendMailService {
                           String subContentKey,
                           String footerKey,
                           String secret) throws MessagingException, UnsupportedEncodingException {
-        log.info("Sending confirming link to user, email={}", toMail);
+        log.info("[{}]: Sending confirming link to user, email={}", MICROSERVICE_NAME, toMail);
 
         String subject = getLocalizedMessage(subjectKey);
         String[] contents = new String[] {
@@ -97,7 +99,7 @@ public class SendMailServiceImpl implements SendMailService {
 
         mailSender.send(message);
 
-        log.info("Confirming link has sent to user, email={}, code={}", toMail, secret);
+        log.info("[{}]: Confirming link has sent to user, email={}, code={}", MICROSERVICE_NAME, toMail, secret);
     }
 
 }

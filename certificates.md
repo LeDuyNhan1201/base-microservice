@@ -79,7 +79,7 @@ keytool -list -v -keystore mail-service/certs/mail.keystore.jks
 # Create a server certificate signed by the CA
 openssl genrsa -out mail-service/certs/mail.key 2048
 openssl req -new -key mail-service/certs/mail.key -out mail-service/certs/mail.csr -passin pass:mailpass -subj "/CN=localhost/OU=IT/O=SGU/L=HCM/ST=BinhTan/C=VN"
-openssl x509 -req -in profile-service/certs/profile.csr -CA openssl/CA/ca.crt -CAkey openssl/CA/ca.key -CAcreateserial -out profile-service/certs/profile.crt -days 365
+openssl x509 -req -in mail-service/certs/mail.csr -CA openssl/CA/ca.crt -CAkey openssl/CA/ca.key -CAcreateserial -out mail-service/certs/mail.crt -days 365
 
 
 # Create the keystore

@@ -1,7 +1,7 @@
 package com.ben.identity.components;
 
 import com.ben.identity.exceptions.AppException;
-import com.ben.identity.services.AuthenticationService;
+import com.ben.identity.services.AuthService;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +14,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
 import java.util.Objects;
 
-import static com.ben.identity.Constants.ACCESS_TOKEN_SIGNATURE_ALGORITHM;
+import static com.ben.identity.utils.Constants.ACCESS_TOKEN_SIGNATURE_ALGORITHM;
 import static com.ben.identity.exceptions.AppErrorCode.INVALID_TOKEN;
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Component
 @RequiredArgsConstructor
@@ -26,14 +27,14 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Value("${jwt.accessSignerKey}")
     private String ACCESS_SIGNER_KEY;
 
-    private final AuthenticationService authenticationService;
+    private final AuthService authService;
 
     private NimbusJwtDecoder nimbusJwtDecoder = null;
 
     @Override
     public Jwt decode(String token) {
         try {
-            if (!authenticationService.introspect(token)) throw new AppException(INVALID_TOKEN, BAD_GATEWAY, "Introspection failed");
+            if (!authService.introspect(token)) throw new AppException(INVALID_TOKEN, UNAUTHORIZED, "Introspection failed");
 
         } catch (JOSEException | ParseException e) {
             throw new JwtException(e.getMessage());

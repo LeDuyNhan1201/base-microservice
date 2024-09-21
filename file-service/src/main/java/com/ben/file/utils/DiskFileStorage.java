@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static com.ben.file.Constants.MICROSERVICE_NAME;
+
 @Slf4j
 public class DiskFileStorage {
 
@@ -39,7 +41,7 @@ public class DiskFileStorage {
             Files.createDirectories(folderPath);
 
         } catch (IOException e) {
-            log.error("Can not create folder: {}", folderPath);
+            log.error("[{}]: Can not create folder: {}", MICROSERVICE_NAME, folderPath);
         }
     }
 

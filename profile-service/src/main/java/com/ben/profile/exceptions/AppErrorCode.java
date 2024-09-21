@@ -8,6 +8,7 @@ public enum AppErrorCode {
     VALIDATION_ERROR("auth/validation-error", "validation_error"),
 
     // Token Errors
+    INTROSPECT_FAILED("auth/introspect-failed", "introspect_failed"),
     TOKEN_MISSING("auth/token-missing", "token_missing"),
 
     //Rate Limiting Errors
@@ -16,6 +17,7 @@ public enum AppErrorCode {
 
     DEBEZIUM_CONNECT_FAILED("profile/debezium-connect-failed", "debezium_connect_failed"),
     PROFILE_NOT_FOUND("profile/profile-not-found", "profile_not_found"),
+    AVATAR_UPLOAD_FAILED("profile/avatar-upload-failed", "avatar_upload_failed"),
     ;
 
     AppErrorCode(String code, String message) {

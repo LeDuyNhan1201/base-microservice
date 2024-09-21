@@ -1,9 +1,21 @@
 server:
-  port: 8085
+  port: ${SERVER_PORT:8085}
   servlet:
     context-path: /mail
     encoding:
       charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    service-url:
+      defaultZone: http://${SERVER_HOST:localhost}:${EUREKA_PORT:8761}/eureka
 
 #_______________________________________LOGGING_______________________________________
 logging:
@@ -25,16 +37,23 @@ management:
     health:
       show-details: always
 
+  info:
+    git:
+      enabled: true
+      mode: full
+
   metrics:
     distribution:
       percentiles-histogram:
         http:
           server:
             requests: true
+    tags:
+      application: ${spring.application.name}
 
   observations:
     key-values:
-      application: mail-service
+      application: ${spring.application.name}
 
   tracing:
     sampling:
@@ -45,12 +64,25 @@ spring:
   config:
     import: file:env.properties
 
+  profiles:
+    active: dev
+
+  application:
+    name: mail-service
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   mail:
     from: ${FROM_MAIL}
+    verify-link: ${VERIFY_LINK:http://localhost:8082/identity/auth/verify-email-by-token}
     host: smtp.gmail.com
     port: 587
-    username: benlun99999@gmail.com
-    password: wzjgpkghyvmvnoyz # wzjg pkgh yvmv noyz
+    username: ${FROM_MAIL}
+    password: ${SMTP_PASSWORD} # wzjg pkgh yvmv noyz
     default-encoding: UTF-8
     properties:
       mail:
@@ -65,28 +97,20 @@ spring:
             enable: true
             required: true
 
-  profiles:
-    active: dev
-
-  application:
-    name: mail-service
-
   messages:
     basename: i18n/messages
     encoding: UTF-8
     default-locale: en
+    cache-duration: 3600
 
-#_______________________________________KAFKA_______________________________________
+  #_______________________________________KAFKA_______________________________________
   kafka:
-    bootstrap-servers: localhost:9093
-    listener:
-      ack-mode: manual
-      client-id: mail-service
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
 
     properties:
       security.protocol: SSL
-      #      sasl.mechanism: PLAIN
-      #      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
+#      sasl.mechanism: PLAIN
+#      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="ben1201" password="Ben1201#" user_ben1201="Ben1201#";
       ssl.truststore.location: mail-service/certs/mail.truststore.jks
       ssl.truststore.password: ${MAIL_PASSWORD}
       ssl.keystore.location: mail-service/certs/mail.keystore.jks
@@ -95,8 +119,8 @@ spring:
 
       schema:
         registry:
-          url: http://localhost:8081
+          url: http://${SCHEMA_REGISTRY_URL:localhost:8081}
 
     identity-consumer:
-      group-id: identity-to-profile-group
+      group-id: identity-to-mail-group
 

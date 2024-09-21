@@ -1,0 +1,176 @@
+server:
+  port: 8888
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    service-url:
+      defaultZone: http://${SERVER_HOST:localhost}:${EUREKA_PORT:8761}/eureka
+
+#_______________________________________LOGGING_______________________________________
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+#_______________________________________MANAGEMENT_______________________________________
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+
+spring:
+  profiles:
+      active: dev
+
+  application:
+    name: gateway-service
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    default-locale: en
+    cache-duration: 3600
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+  data:
+    redis:
+      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:localhost}
+      database: 0
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: false
+
+      routes:
+        - id: identity-service
+          uri: lb:http://IDENTITY-SERVICE
+          predicates:
+            - Path=/identity/**
+          filters:
+#            - StripPrefix=3
+#            - RewritePath=/identity/?(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: identityService
+                fallbackUri: forward:/identity/fallback
+
+            - name: Retry
+              args:
+                name: identityService
+                retries: 3
+                backoff:
+                  firstBackoff: 1s
+                  maxBackoff: 5s
+                  factor: 2
+
+        - id: profile-service
+          uri: lb:http://PROFILE-SERVICE
+          predicates:
+            - Path=/profile/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: profileService
+                fallbackUri: forward:/profile/fallback
+
+            - name: Retry
+              args:
+                name: profileService
+                retries: 3
+                backoff:
+                  firstBackoff: 1s
+                  maxBackoff: 5s
+                  factor: 2
+
+      default-filters:
+        - SaveSession
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@combinedKeyResolver}"
+            redis-rate-limiter.replenishRate: 5
+            redis-rate-limiter.burstCapacity: 10
+            redis-rate-limiter.replenishInterval: 10s
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers RETAIN_FIRST
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      identityService:
+        registerHealthIndicator: true  # Đăng ký health indicator cho Actuator
+        slidingWindowSize: 10          # Kích thước cửa sổ trượt
+        failureRateThreshold: 50       # Ngưỡng phần trăm lỗi để mở Circuit Breaker
+        waitDurationInOpenState: 10000 # Thời gian đợi khi Circuit Breaker ở trạng thái mở (mili giây)
+        permittedNumberOfCallsInHalfOpenState: 3 # Số cuộc gọi được phép khi ở trạng thái half-open
+        minimumNumberOfCalls: 5        # Số lượng tối thiểu các cuộc gọi trước khi tính toán lỗi
+        automaticTransitionFromOpenToHalfOpenEnabled: true # Tự động chuyển từ trạng thái open sang half-open
+
+      profileService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+  timelimiter:
+    instances:
+      identityService:
+        timeoutDuration: 1s
+
+      profileService:
+        timeoutDuration: 1s
+
+  retry:
+    instances:
+      identityService:
+        maxAttempts: 3
+        waitDuration: 1s
+
+      profileService:
+        maxAttempts: 3
+        waitDuration: 1s

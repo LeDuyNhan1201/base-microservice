@@ -1,1 +1,1 @@
-CREATE DATABASE infinitynet;
+CREATE DATABASE identity_service_db;

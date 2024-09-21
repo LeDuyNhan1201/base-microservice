@@ -1,0 +1,42 @@
+server:
+  port: ${SERVER_PORT:8761}
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: "*"
+
+  endpoint:
+    health:
+      show-details: always
+
+  info:
+    git:
+      enabled: true
+      mode: full
+
+  tracing:
+    sampling:
+      probability: 1.0
+
+spring:
+  profiles:
+    active: dev
+
+  application:
+    name: discovery-server
+
+
+

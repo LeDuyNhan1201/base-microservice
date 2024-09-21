@@ -6,6 +6,7 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.ben.profile.utils.Constants.MICROSERVICE_NAME;
 import static com.ben.profile.components.Translator.getLocalizedMessage;
 import static com.ben.profile.exceptions.AppErrorCode.VALIDATION_ERROR;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -35,7 +37,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(CommonResponse.builder().message(exception.getMessage()));
     }
 
-    @ExceptionHandler(value = AuthorizationDeniedException.class)
+    @ExceptionHandler(value = { AuthorizationDeniedException.class, HttpMediaTypeNotAcceptableException.class })
     ResponseEntity<?> handlingAuthorizationDeniedException(AuthorizationDeniedException exception) {
         errorLogging(exception.getMessage(), exception);
         return ResponseEntity.status(UNAUTHORIZED).body(
@@ -74,7 +76,8 @@ public class GlobalExceptionHandler {
     }
 
     private void errorLogging(String reason, Exception exception) {
-        log.error("Reason:{}|class:{}|line:{}", reason, exception.getClass(), exception.getStackTrace()[0].getLineNumber());
+        log.error("[{}]: Reason: {} | class: {} | line: {}", MICROSERVICE_NAME,
+                reason, exception.getClass(), exception.getStackTrace()[0].getLineNumber());
     }
 
 }

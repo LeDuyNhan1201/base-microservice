@@ -9,6 +9,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import java.io.IOException;
 
 import static com.ben.file.Constants.FILE_METADATA_CONTEXT;
+import static com.ben.file.Constants.MICROSERVICE_NAME;
 import static com.ben.file.components.Translator.getLocalizedMessage;
 import static com.ben.grpc.utils.WriteStatus.SUCCEEDED;
 import static io.grpc.Status.*;
@@ -31,7 +32,8 @@ public class FileService extends FileServiceGrpc.FileServiceImplBase {
                     fileUploadRequest.getFile().getContent().writeTo(diskFileStorage.getStream());
 
                 } catch (IOException e) {
-                    responseObserver.onError(INTERNAL.withDescription(getLocalizedMessage("can_not_store_file"))
+                    responseObserver.onError(INTERNAL.withDescription(
+                            String.format("[%s]: %s", MICROSERVICE_NAME, getLocalizedMessage("can_not_store_file")))
                             .asRuntimeException());
                 }
             }
@@ -39,13 +41,13 @@ public class FileService extends FileServiceGrpc.FileServiceImplBase {
             @Override
             public void onError(Throwable throwable) {
                 responseObserver.onError(INTERNAL.withDescription(
-                        getLocalizedMessage("can_not_store_file")).withCause(throwable)
+                        String.format("[%s]: %s", MICROSERVICE_NAME, getLocalizedMessage("can_not_store_file"))).withCause(throwable)
                         .asRuntimeException());
                 try {
                     diskFileStorage.close();
 
                 } catch (IOException e) {
-                    log.error("cannot close file storage due to : {}", e.getMessage());
+                    log.error("[{}]: cannot close file storage due to : {}", MICROSERVICE_NAME, e.getMessage());
                 }
             }
 
@@ -58,16 +60,14 @@ public class FileService extends FileServiceGrpc.FileServiceImplBase {
                         diskFileStorage.close();
 
                     } else {
-                        responseObserver.onError(FAILED_PRECONDITION.withDescription(String.format(
-                                        "expected %d but received %d", fileMetadata.getContentLength(), totalBytesReceived)
-                                ).asRuntimeException()
-                        );
+                        responseObserver.onError(FAILED_PRECONDITION.withDescription(String.format("[%s]: expected %d but received %d",
+                                        MICROSERVICE_NAME, fileMetadata.getContentLength(), totalBytesReceived)).asRuntimeException());
                         return;
                     }
 
                 } catch (IOException e) {
-                    responseObserver.onError(INTERNAL.withDescription(getLocalizedMessage("can_not_store_file"))
-                            .asRuntimeException());
+                    responseObserver.onError(INTERNAL.withDescription(String.format("[%s]: %s", MICROSERVICE_NAME,
+                            getLocalizedMessage("can_not_store_file"))).asRuntimeException());
                     return;
                 }
 

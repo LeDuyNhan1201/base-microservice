@@ -6,8 +6,7 @@ import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.interceptor.GrpcGlobalServerInterceptor;
 
-import static com.ben.file.Constants.FILE_METADATA_CONTEXT;
-import static com.ben.file.Constants.FILE_METADATA_KEY;
+import static com.ben.file.Constants.*;
 import static io.grpc.Status.INTERNAL;
 
 @GrpcGlobalServerInterceptor
@@ -25,7 +24,7 @@ public class FileUploadGrpcServerInterceptor implements ServerInterceptor {
                 fileMetadata = FileMetadata.parseFrom(metaBytes);
 
             } catch (InvalidProtocolBufferException e) {
-                Status status = INTERNAL.withDescription("unable to create file metadata");
+                Status status = INTERNAL.withDescription(String.format("[%s]: unable to create file metadata", MICROSERVICE_NAME));
                 serverCall.close(status, metadata);
             }
 

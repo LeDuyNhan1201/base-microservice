@@ -4,6 +4,8 @@ import io.grpc.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.interceptor.GrpcGlobalServerInterceptor;
 
+import static com.ben.file.Constants.MICROSERVICE_NAME;
+
 @GrpcGlobalServerInterceptor
 @Slf4j
 public class ExceptionHandlingInterceptor implements ServerInterceptor {
@@ -24,7 +26,7 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
                     super.onHalfClose();
                 } catch (Exception e) {
                     call.close(Status.INTERNAL
-                            .withDescription("Exception thrown by application: " + e.getMessage()), new Metadata());
+                            .withDescription(String.format("[%s]: Exception thrown by application: %s", MICROSERVICE_NAME, e.getMessage())), new Metadata());
                 }
             }
 

@@ -1,5 +1,13 @@
 server:
-  port: 8084
+  port: ${SERVER_PORT:8084}
+
+eureka:
+  instance:
+    hostname: ${SERVER_HOST:localhost}
+
+  client:
+    service-url:
+      defaultZone: http://${SERVER_HOST:localhost}:${EUREKA_PORT:8761}/eureka
 
 #_______________________________________JWT_______________________________________
 jwt:
@@ -8,7 +16,7 @@ jwt:
 #_______________________________________GRPC_______________________________________
 grpc:
   server:
-    port: 10004
+    port: ${GRPC_PORT:10004}
 
 #_______________________________________LOGGING_______________________________________
 logging:
@@ -34,18 +42,26 @@ management:
     health:
       show-details: always
 
+  info:
+    git:
+      enabled: true
+      mode: full
+
   metrics:
     distribution:
       percentiles-histogram:
         http:
           server:
             requests: true
+    tags:
+      application: ${spring.application.name}
 
   observations:
     key-values:
-      application: file-service
+      application: ${spring.application.name}
 
   tracing:
+    enabled: true
     sampling:
       probability: 1.0
 
@@ -64,3 +80,4 @@ spring:
     basename: i18n/messages
     encoding: UTF-8
     default-locale: en
+    cache-duration: 3600

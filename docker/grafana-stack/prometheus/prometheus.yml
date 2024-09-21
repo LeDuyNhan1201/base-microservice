@@ -7,17 +7,32 @@ scrape_configs:
     static_configs:
       - targets: ['base-microservice-prometheus:9090']
 
+  - job_name: 'gateway-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8888']
+
   - job_name: 'identity-service'
+    scrape_interval: 2s
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['localhost:8082']
 
   - job_name: 'profile-service'
+    scrape_interval: 2s
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['localhost:8083']
 
   - job_name: 'file-service'
+    scrape_interval: 2s
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: [ 'localhost:8084' ]
+
+  - job_name: 'mail-service'
+    scrape_interval: 2s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'localhost:8085' ]
