@@ -131,9 +131,9 @@ spring:
         - name: RequestRateLimiter
           args:
             key-resolver: "#{@combinedKeyResolver}"
-            redis-rate-limiter.replenishRate: 5
-            redis-rate-limiter.burstCapacity: 10
-            redis-rate-limiter.replenishInterval: 10s
+            redis-rate-limiter:
+              replenishRate: 1
+              burstCapacity: 5
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers RETAIN_FIRST
 
 resilience4j:

@@ -9,8 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,11 +26,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.PathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import static com.ben.gateway.utils.Constants.MICROSERVICE_NAME;
 import static com.ben.gateway.components.Translator.getLocalizedMessage;
@@ -54,9 +61,39 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/profile/api-docs/**"
     };
 
+    List<Locale> LOCALES = List.of(
+            Locale.forLanguageTag("en"),
+            Locale.forLanguageTag("vi")
+    );
+
+    @Bean
+    public MessageSource messageSource(
+            @Value("${spring.messages.basename}") String basename,
+            @Value("${spring.messages.encoding}") String encoding,
+            @Value("${spring.messages.default-locale}") String defaultLocale,
+            @Value("${spring.messages.cache-duration}") int cacheSeconds
+    ) {
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasename(basename);
+        messageSource.setDefaultEncoding(encoding);
+        messageSource.setDefaultLocale(Locale.of(defaultLocale));
+        messageSource.setCacheSeconds(cacheSeconds);
+        return messageSource;
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         log.info("[{}]: Enter authentication filter....", MICROSERVICE_NAME);
+
+        String headerLang = exchange.getRequest().getHeaders().getFirst("Accept-Language");
+        log.info("Accept-Language: {}", headerLang);
+        Locale locale = StringUtils.hasLength(headerLang)
+                ? Locale.lookup(Locale.LanguageRange.parse(headerLang), LOCALES)
+                : Locale.getDefault();
+
+        LocaleContextHolder.setLocale(locale);
+
+        log.info("Resolved Locale: {}", LocaleContextHolder.getLocale());
 
         if (isPublicEndpoint(exchange.getRequest()))
             return chain.filter(exchange);

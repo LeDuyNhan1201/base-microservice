@@ -43,14 +43,14 @@ public class KeyResolverConfig {
     public KeyResolver combinedKeyResolver() {
         return exchange -> {
             List<String> authHeaders = exchange.getRequest().getHeaders().get("Authorization");
-            if (authHeaders != null && !authHeaders.isEmpty()) {
-                // Prefer tokenSubjectKeyResolver if token is available
-                return tokenSubjectKeyResolver().resolve(exchange);
-            } else {
-                // Fallback to ipAddressResolver
-                return ipAddressResolver().resolve(exchange);
-            }
-            //return ipAddressResolver().resolve(exchange);
+//            if (authHeaders != null && !authHeaders.isEmpty()) {
+//                // Prefer tokenSubjectKeyResolver if token is available
+//                return tokenSubjectKeyResolver().resolve(exchange);
+//            } else {
+//                // Fallback to ipAddressResolver
+//                return ipAddressResolver().resolve(exchange);
+//            }
+           return ipAddressResolver().resolve(exchange);
         };
     }
 

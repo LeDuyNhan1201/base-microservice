@@ -11,7 +11,7 @@ datasources:
     uid: prometheus
     access: proxy
     orgId: 1
-    url: http://base-microservice-prometheus:9090
+    url: http://infinity-net-prometheus:9090
     basicAuth: false
     isDefault: false
     version: 1
@@ -28,7 +28,7 @@ datasources:
     uid: tempo
     access: proxy
     orgId: 1
-    url: http://base-microservice-tempo:3200
+    url: http://infinity-net-tempo:3100
     basicAuth: false
     isDefault: false
     version: 1
@@ -37,17 +37,17 @@ datasources:
     jsonData:
       httpMethod: GET
       tracesToLogs:
-        datasourceUid: loki
+        datasourceUid: 'loki'
         tags: [ 'instance', 'pod', 'namespace', 'hostname' ]
         mappedTags: [ { key: 'service.name', value: 'application' } ]
         mapTagNamesEnabled: true
-        spanStartTimeShift: 1h
-        spanEndTimeShift: 1h
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
         filterByTraceID: true
         filterBySpanID: false
         lokiSearch: true
       serviceMap:
-        datasourceUid: prometheus
+        datasourceUid: 'prometheus'
       search:
         hide: false
       nodeGraph:
@@ -58,7 +58,7 @@ datasources:
     uid: loki
     access: proxy
     orgId: 1
-    url: http://base-microservice-loki:3100
+    url: http://infinity-net-loki:3100
     basicAuth: false
     isDefault: true
     version: 1
@@ -67,7 +67,6 @@ datasources:
     jsonData:
       derivedFields:
         -   datasourceUid: tempo
-#            matcherRegex: \[.+,(.+?),
             matcherRegex: \d+\-\d+\-\d+ \d+\:\d+\:\d+\.\d+\s+\w+\s+\[[\w-]+\,(\w+)\,\w+\]
             name: TraceID
             url: $${__value.raw}

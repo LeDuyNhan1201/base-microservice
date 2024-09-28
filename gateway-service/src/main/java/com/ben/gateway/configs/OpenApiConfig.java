@@ -1,8 +1,5 @@
 package com.ben.gateway.configs;
 
-import static com.ben.common.Utils.convertToTitleCase;
-import static org.springdoc.core.utils.Constants.DEFAULT_API_DOCS_URL;
-
 import jakarta.annotation.PostConstruct;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +15,8 @@ import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionLocator;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+
+import static com.ben.common.Utils.convertToTitleCase;
 
 @Configuration
 @RequiredArgsConstructor

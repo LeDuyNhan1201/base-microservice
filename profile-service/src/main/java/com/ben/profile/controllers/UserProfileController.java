@@ -2,7 +2,6 @@ package com.ben.profile.controllers;
 
 import com.ben.profile.dtos.responses.CommonResponse;
 import com.ben.profile.repositories.externals.FileServiceGrpcClient;
-import com.ben.profile.utils.Constants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;

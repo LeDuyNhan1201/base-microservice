@@ -2,7 +2,7 @@ package com.ben.profile.configs;
 
 import com.ben.grpc.file.FileServiceGrpc;
 import com.ben.grpc.identity.IdentityServiceGrpc;
-import com.ben.profile.interceptors.BearerTokenGrpcClientInterceptor;
+import com.ben.profile.interceptors.GrpcClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class GrpcClientConfig {
 
         return ManagedChannelBuilder.forAddress(instance.getHost(), instance.getPort() % 10 + 10000)
                 .usePlaintext()
-                .intercept(new BearerTokenGrpcClientInterceptor())
+                .intercept(new GrpcClientInterceptor())
                 .build();
     }
 
